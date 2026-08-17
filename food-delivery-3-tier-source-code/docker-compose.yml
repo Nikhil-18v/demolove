@@ -1,4 +1,27 @@
 services:
+  frontend:
+    image: frontend:latest
+    container_name: food-delivery-frontend
+    ports:
+      - "8080:80"
+    depends_on:
+      - backend
+
+  backend:
+    image: backend:latest
+    container_name: food-delivery-backend
+    ports:
+      - "5000:5000"
+    environment:
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_NAME: food_delivery
+      DB_USER: fooduser
+      DB_PASSWORD: foodpass
+    depends_on:
+      db:
+        condition: service_healthy
+
   db:
     image: postgres:16
     container_name: food-delivery-db
