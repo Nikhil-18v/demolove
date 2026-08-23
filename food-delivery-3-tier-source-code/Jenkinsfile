@@ -30,7 +30,15 @@ stage('Frontend Build') {
                 }
             }
         }
-
+stage('Check Workspace') {
+    steps {
+        sh '''
+            pwd
+            ls -la
+            find . -name Dockerfile -print
+        '''
+    }
+}
         stage('Build Docker Images') {
             steps {
                 sh '''
