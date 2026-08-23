@@ -14,7 +14,7 @@ stage('Backend Build') {
         dir('food-delivery-3-tier-source-code/backend') {
             sh '''
                 npm install
-                echo "Backend dependencies installed successful
+                echo "Backend dependencies installed successful"
             '''
         }
     }
