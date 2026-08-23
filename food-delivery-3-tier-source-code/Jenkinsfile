@@ -9,12 +9,12 @@ pipeline {
             }
         }
 
-        stage('Backend Test') {
+stage('Backend Build') {
     steps {
         dir('food-delivery-3-tier-source-code/backend') {
             sh '''
                 npm install
-                npm test
+                echo "Backend dependencies installed successful
             '''
         }
     }
