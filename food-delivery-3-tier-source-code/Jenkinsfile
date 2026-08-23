@@ -1,0 +1,61 @@
+peline {
+    agent any
+
+    stages {
+
+        stage('Checkout') {
+            steps {
+                checkout scm
+            }
+        }
+
+        stage('Backend Test') {
+            steps {
+                dir('backend') {
+                    sh '''
+                        npm install
+                        npm test
+                    '''
+                }
+            }
+        }
+
+        stage('Frontend Build') {
+            steps {
+                dir('frontend') {
+                    sh '''
+                        npm install
+                        npm run build
+                    '''
+                }
+            }
+        }
+
+        stage('Build Docker Images') {
+            steps {
+                sh '''
+                    docker build -t food-delivery-backend ./backend
+                    docker build -t food-delivery-frontend ./frontend
+                '''
+            }
+        }
+
+        stage('Docker Images') {
+            steps {
+                sh '''
+                    docker images | grep food-delivery
+                '''
+            }
+        }
+    }
+
+    post {
+        success {
+            echo 'Food Delivery CI Pipeline completed successfully!'
+        }
+
+        failure {
+            echo 'Food Delivery CI Pipeline failed!'
+        }
+    }
+}
