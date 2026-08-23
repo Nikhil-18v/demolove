@@ -10,22 +10,22 @@ pipeline {
         }
 
         stage('Backend Test') {
-            steps {
-                dir('backend') {
-                    sh '''
-                        npm install
-                        npm test
-                    '''
-                }
-            }
+    steps {
+        dir('food-delivery-3-tier-source-code/backend') {
+            sh '''
+                npm install
+                npm test
+            '''
         }
+    }
+}
 
-        stage('Frontend Build') {
-            steps {
-                dir('frontend') {
-                    sh '''
-                        npm install
-                        npm run build
+stage('Frontend Build') {
+    steps {
+        dir('food-delivery-3-tier-source-code/frontend') {
+            sh '''
+                npm install
+                npm run build
                     '''
                 }
             }
