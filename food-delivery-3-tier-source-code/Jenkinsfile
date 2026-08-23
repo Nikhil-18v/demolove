@@ -34,8 +34,8 @@ stage('Frontend Build') {
         stage('Build Docker Images') {
             steps {
                 sh '''
-                    docker build -t food-delivery-backend ./backend
-                    docker build -t food-delivery-frontend ./frontend
+                    docker build -t food-delivery-backend ./food-delivery-3-tier-source-code/backend
+                    docker build -t food-delivery-frontend ./food-delivery-3-tier-source-code/frontend
                 '''
             }
         }
