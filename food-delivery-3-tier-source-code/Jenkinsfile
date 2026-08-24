@@ -44,8 +44,8 @@ pipeline {
         stage('Build Docker Images') {
             steps {
                 sh '''
-                    docker build -t YOUR_USERNAME/food-delivery-backend:${BUILD_NUMBER} ./food-delivery-3-tier-source-code/backend
-                    docker build -t YOUR_USERNAME/food-delivery-frontend:${BUILD_NUMBER} ./food-delivery-3-tier-source-code/frontend
+                    docker build -t nikhilbecomessre/food-delivery-backend:${BUILD_NUMBER} ./food-delivery-3-tier-source-code/backend
+                    docker build -t nikhilbecomessre/food-delivery-frontend:${BUILD_NUMBER} ./food-delivery-3-tier-source-code/frontend
                 '''
             }
         }
@@ -63,9 +63,9 @@ pipeline {
                 script {
                     docker.withRegistry('https://index.docker.io/v1/', 'docker-cred') {
 
-                        docker.image("YOUR_USERNAME/food-delivery-backend:${BUILD_NUMBER}").push()
+                        docker.image("nikhilbecomessre/food-delivery-backend:${BUILD_NUMBER}").push()
 
-                        docker.image("YOUR_USERNAME/food-delivery-frontend:${BUILD_NUMBER}").push()
+                        docker.image("nikhilbecomessre/food-delivery-frontend:${BUILD_NUMBER}").push()
                     }
                 }
             }
