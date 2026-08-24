@@ -40,7 +40,19 @@ pipeline {
                 '''
             }
         }
-
+stage('Docker Login Test') {
+            steps {
+                withCredentials([usernamePassword(
+                    credentialsId: 'Docker-cred',
+                    usernameVariable: 'DOCKER_USER',
+                    passwordVariable: 'DOCKER_PASSWORD'
+                )]) {
+                    sh '''
+                        echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USER" --password-stdin
+                    '''
+                }
+            }
+        }
         stage('Build Docker Images') {
             steps {
                 sh '''
