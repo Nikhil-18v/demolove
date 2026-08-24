@@ -13,8 +13,20 @@ pipeline {
             steps {
                 dir('food-delivery-3-tier-source-code/backend') {
                     sh '''
+                        echo "Installing backend dependencies..."
                         npm install
-                        echo "Backend dependencies installed successful"
+                        echo "Backend dependencies installed successfully"
+                    '''
+                }
+            }
+        }
+
+        stage('Backend Test') {
+            steps {
+                dir('food-delivery-3-tier-source-code/backend') {
+                    sh '''
+                        echo "Running backend tests..."
+                        npm test
                     '''
                 }
             }
@@ -24,40 +36,36 @@ pipeline {
             steps {
                 dir('food-delivery-3-tier-source-code/frontend') {
                     sh '''
+                        echo "Installing frontend dependencies..."
                         npm install
+
+                        echo "Building frontend..."
                         npm run build
+
+                        echo "Frontend build completed successfully"
                     '''
                 }
             }
         }
 
-        stage('Check Workspace') {
+        stage('Docker Build') {
             steps {
                 sh '''
-                    pwd
-                    ls -la
-                    find . -name Dockerfile -print
-                '''
-            }
-        }
-stage('Docker Login Test') {
-            steps {
-                withCredentials([usernamePassword(
-                    credentialsId: 'Docker-cred',
-                    usernameVariable: 'DOCKER_USER',
-                    passwordVariable: 'DOCKER_PASSWORD'
-                )]) {
-                    sh '''
-                        echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USER" --password-stdin
-                    '''
-                }
-            }
-        }
-        stage('Build Docker Images') {
-            steps {
-                sh '''
-                    docker build -t nikhilbecomessre/food-delivery-backend:${BUILD_NUMBER} ./food-delivery-3-tier-source-code/backend
-                    docker build -t nikhilbecomessre/food-delivery-frontend:${BUILD_NUMBER} ./food-delivery-3-tier-source-code/frontend
+                    echo "Building backend Docker image..."
+
+                    docker build \
+                        -t nikhilbecomessre/food-delivery-backend:${BUILD_NUMBER} \
+                        -f food-delivery-3-tier-source-code/docker/backend.Dockerfile \
+                        food-delivery-3-tier-source-code
+
+                    echo "Building frontend Docker image..."
+
+                    docker build \
+                        -t nikhilbecomessre/food-delivery-frontend:${BUILD_NUMBER} \
+                        -f food-delivery-3-tier-source-code/docker/frontend.Dockerfile \
+                        food-delivery-3-tier-source-code
+
+                    echo "Docker images built successfully"
                 '''
             }
         }
@@ -65,33 +73,71 @@ stage('Docker Login Test') {
         stage('Docker Images') {
             steps {
                 sh '''
+                    echo "Checking Docker images..."
+
                     docker images | grep food-delivery
                 '''
             }
         }
 
-        stage('Push Docker Images') {
+        stage('Docker Login') {
             steps {
-                script {
-                    docker.withRegistry('https://index.docker.io/v1/', 'Docker-cred') {
-
-                        docker.image("nikhilbecomessre/food-delivery-backend:${BUILD_NUMBER}").push()
-
-                        docker.image("nikhilbecomessre/food-delivery-frontend:${BUILD_NUMBER}").push()
-                    }
+                withCredentials([usernamePassword(
+                    credentialsId: 'Docker-cred',
+                    usernameVariable: 'DOCKER_USER',
+                    passwordVariable: 'DOCKER_PASSWORD'
+                )]) {
+                    sh '''
+                        echo "$DOCKER_PASSWORD" | docker login \
+                            -u "$DOCKER_USER" \
+                            --password-stdin
+                    '''
                 }
             }
         }
 
-    }   // <-- closes stages
+        stage('Push Docker Images') {
+            steps {
+                sh '''
+                    echo "Pushing backend image..."
+
+                    docker push \
+                        nikhilbecomessre/food-delivery-backend:${BUILD_NUMBER}
+
+                    echo "Backend image pushed successfully"
+
+                    echo "Pushing frontend image..."
+
+                    docker push \
+                        nikhilbecomessre/food-delivery-frontend:${BUILD_NUMBER}
+
+                    echo "Frontend image pushed successfully"
+                '''
+            }
+        }
+
+    }
 
     post {
+
         success {
-            echo 'Food Delivery CI Pipeline completed successfully!'
+            echo '========================================='
+            echo 'Food Delivery CI Pipeline SUCCESSFUL!'
+            echo "Build Number: ${BUILD_NUMBER}"
+            echo 'Docker images pushed successfully!'
+            echo '========================================='
         }
 
         failure {
-            echo 'Food Delivery CI Pipeline failed!'
+            echo '========================================='
+            echo 'Food Delivery CI Pipeline FAILED!'
+            echo "Build Number: ${BUILD_NUMBER}"
+            echo 'Check the Jenkins console output.'
+            echo '========================================='
+        }
+
+        always {
+            echo "Pipeline completed for Build #${BUILD_NUMBER}"
         }
     }
 }
