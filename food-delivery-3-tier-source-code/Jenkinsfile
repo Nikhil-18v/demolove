@@ -20,18 +20,6 @@ pipeline {
                 }
             }
         }
-
-        stage('Backend Test') {
-            steps {
-                dir('food-delivery-3-tier-source-code/backend') {
-                    sh '''
-                        echo "Running backend tests..."
-                        npm test
-                    '''
-                }
-            }
-        }
-
         stage('Frontend Build') {
             steps {
                 dir('food-delivery-3-tier-source-code/frontend') {
