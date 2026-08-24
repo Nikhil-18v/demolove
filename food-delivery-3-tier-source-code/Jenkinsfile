@@ -43,14 +43,14 @@ pipeline {
 
                     docker build \
                         -t nikhilbecomessre/food-delivery-backend:${BUILD_NUMBER} \
-                        -f food-delivery-3-tier-source-code/docker/backend.Dockerfile \
+                        -f food-delivery-3-tier-source-code/backend/Dockerfile \
                         food-delivery-3-tier-source-code
 
                     echo "Building frontend Docker image..."
 
                     docker build \
                         -t nikhilbecomessre/food-delivery-frontend:${BUILD_NUMBER} \
-                        -f food-delivery-3-tier-source-code/docker/frontend.Dockerfile \
+                        -f food-delivery-3-tier-source-code/frontend/Dockerfile \
                         food-delivery-3-tier-source-code
 
                     echo "Docker images built successfully"
