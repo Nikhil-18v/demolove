@@ -6,6 +6,23 @@ pipeline {
     }
   }
   stages {
+    stage('Check Agent') {
+            steps {
+                sh '''
+                    echo "Hostname:"
+                    hostname
+
+                    echo "OS:"
+                    cat /etc/os-release | head
+
+                    echo "Node:"
+                    node --version
+
+                    echo "User:"
+                    whoami
+                '''
+            }
+        }
         stage('Backend Build') {
             steps {
                 dir('food-delivery-3-tier-source-code/backend') {
