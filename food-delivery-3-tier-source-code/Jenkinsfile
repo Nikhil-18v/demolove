@@ -12,9 +12,6 @@ pipeline {
                 }
             }
 
-            stages {
-
-
             
                 stage('Check Agent') {
                     steps {
