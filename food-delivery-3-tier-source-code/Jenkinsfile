@@ -1,111 +1,43 @@
 pipeline {
-  agent {
-    docker {
-      image 'nikhilbecomessre/jenkinagentv1:latest'
-      args '--user root -v /var/run/docker.sock:/var/run/docker.sock' // mount Docker socket to access the host's Docker daemon
-    
-  
-  stages {
-    stage('Check Agent') {
-            steps {
-                sh '''
-                    echo "Hostname:"
-                    hostname
 
-                    echo "OS:"
-                    cat /etc/os-release | head
+    agent none   # no agent given because we dont have permanent agent like docker image or VM/EC2.
 
-                    echo "Node:"
-                    node --version
+    stages {
 
-                    echo "User:"
-                    whoami
-                '''
-            }
-        }
-        stage('Backend Build') {
-            steps {
-                dir('food-delivery-3-tier-source-code/backend') {
-                    sh '''
-                        npm install
-                        echo "Backend dependencies installed successful"
-                    '''
+        stage('Build on Kubernetes Agent') {
+
+            agent {
+                kubernetes {
+                    yamlFile 'k8s/jenkins-agent-pod.yaml'
                 }
             }
-        }
 
-        stage('Frontend Build') {
-            steps {
-                dir('food-delivery-3-tier-source-code/frontend') {
-                    sh '''
-                        npm install
-                        npm run build
-                    '''
-                }
-            }
-        }
+            stages {
 
-        stage('Check Workspace') {
-            steps {
-                sh '''
-                    pwd
-                    ls -la
-                    find . -name Dockerfile -print
-                '''
-            }
-        }
-stage('Docker Login Test') {
-            steps {
-                withCredentials([usernamePassword(
-                    credentialsId: 'Docker-cred',
-                    usernameVariable: 'DOCKER_USER',
-                    passwordVariable: 'DOCKER_PASSWORD'
-                )]) {
-                    sh '''
-                        echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USER" --password-stdin
-                    '''
-                }
-            }
-        }
-        stage('Build Docker Images') {
-            steps {
-                sh '''
-                    docker build -t nikhilbecomessre/food-delivery-backend:${BUILD_NUMBER} ./food-delivery-3-tier-source-code/backend
-                    docker build -t nikhilbecomessre/food-delivery-frontend:${BUILD_NUMBER} ./food-delivery-3-tier-source-code/frontend
-                '''
-            }
-        }
-
-        stage('Docker Images') {
-            steps {
-                sh '''
-                    docker images | grep food-delivery
-                '''
-            }
-        }
-
-        stage('Push Docker Images') {
-            steps {
-                script {
-                    docker.withRegistry('https://index.docker.io/v1/', 'Docker-cred') {
-
-                        docker.image("nikhilbecomessre/food-delivery-backend:${BUILD_NUMBER}").push()
-
-                        docker.image("nikhilbecomessre/food-delivery-frontend:${BUILD_NUMBER}").push()
+                #THIS IS NOT IMPORTANT AS WE JUST HAVE THIS TO CHECK THE POD.(verify and understand that your pipeline is really running inside the Kubernetes Pod.)
+                stage('Check Agent') {
+                    steps {
+                        container('node') {
+                            sh '''
+                                echo "Running inside Kubernetes Jenkins agent"
+                                hostname
+                                node --version
+                                npm --version
+                            '''
+                        }
                     }
                 }
             }
         }
-
-    }   // <-- closes stages
+    }
 
     post {
         success {
-            echo 'Food Delivery CI Pipeline completed successfully!'
+            echo 'Pipeline completed successfully'
         }
 
         failure {
-            echo 'Food Delivery CI Pipeline failed!'
+            echo 'Pipeline failed'
         }
     }
 }
