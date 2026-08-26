@@ -8,7 +8,7 @@ pipeline {
 
             agent {
                 kubernetes {
-                    yamlFile 'K8S/pod.yaml'
+                    yamlFile 'food-delivery-3-tier-source-code/K8S/pod.yaml'
                 }
             }
 
