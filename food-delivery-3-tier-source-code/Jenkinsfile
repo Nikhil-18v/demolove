@@ -67,14 +67,26 @@ stage('Docker Login Test') {
                 }
             }
         }
-        stage('Build Docker Images') {
-            steps {
-                sh '''
-                    docker build -t nikhilbecomessre/food-delivery-backend:${BUILD_NUMBER} ./food-delivery-3-tier-source-code/backend
-                    docker build -t nikhilbecomessre/food-delivery-frontend:${BUILD_NUMBER} ./food-delivery-3-tier-source-code/frontend
-                '''
-            }
-        }
+        stage('Build Frontend Docker Image') {
+    steps {
+        sh '''
+            docker build \
+              -t $DOCKER_USER/library-frontend:${BUILD_NUMBER} \
+              -f java-library-3-tier/docker/frontend.Dockerfile \
+              java-library-3-tier/frontend
+        '''
+    }
+}
+    stage('Build Backend Docker Image') {
+    steps {
+        sh '''
+            docker build \
+              -t $DOCKER_USER/library-backend:${BUILD_NUMBER} \
+              -f java-library-3-tier/docker/backend.Dockerfile \
+              java-library-3-tier/backend
+        '''
+    }
+}
 
         stage('Docker Images') {
             steps {
