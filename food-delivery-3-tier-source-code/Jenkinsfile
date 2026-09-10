@@ -1,7 +1,20 @@
 pipeline {
-    agent any
+
+    agent {
+        docker {
+            image 'nikhilbecomessre/jenkinagentv1:latest'
+            args '--user root -v /var/run/docker.sock:/var/run/docker.sock'
+        }
+    }
+
+    environment {
+        DOCKER_USER = 'nikhilbecomessre'
+        FRONTEND_IMAGE = 'libfrontend'
+        BACKEND_IMAGE = 'libbackend'
+    }
 
     stages {
+
 
         stage('Checkout') {
             steps {
