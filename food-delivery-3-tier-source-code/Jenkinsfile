@@ -1,99 +1,95 @@
 pipeline {
+  agent {
+    docker {
+      image 'DOCKER_HUB_USERNAME/Dcokerimage:versoion'
+      args '--user root -v /var/run/docker.sock:/var/run/docker.sock' // mount Docker socket to access the host's Docker daemon
+    }
+  }
+  stages {
 
-    agent none
-
-    stages {
-
-        stage('Build on Kubernetes Agent') {
-
-            agent {
-                kubernetes {
-                    yamlFile 'food-delivery-3-tier-source-code/K8S/pod.yaml'
-                }
-            }
-
-            stages {
-
-                stage('Checkout') {
-                    steps {
-                        checkout scm
-                    }
-                }
-
-                stage('Check Agent') {
-                    steps {
-                        container('node') {
-                            sh '''
-                                echo "===== Kubernetes Jenkins Agent ====="
-                                hostname
-                                node --version
-                                npm --version
-                                whoami
-                            '''
-                        }
-                    }
-                }
-
-                stage('Backend Build') {
-                    steps {
-                        container('node') {
-
-                            dir('food-delivery-3-tier-source-code/backend') {
-
-                                sh '''
-                                    npm install
-
-                                    echo "Backend dependencies installed successfully"
-                                '''
-                            }
-                        }
-                    }
-                }
-
-
-                stage('Frontend Build') {
-                    steps {
-                        container('node') {
-
-                            dir('food-delivery-3-tier-source-code/frontend') {
-
-                                sh '''
-                                    npm install
-
-                                    npm run build
-
-                                    echo "Frontend build completed successfully"
-                                '''
-                            }
-                        }
-                    }
-                }
-
-
-                stage('Check Workspace') {
-                    steps {
-                        container('node') {
-
-                            sh '''
-                                echo "===== Workspace ====="
-
-                                pwd
-
-                                ls -la
-
-                                find . -name Dockerfile -print
-                            '''
-                        }
-                    }
-                }
-
+        stage('Checkout') {
+            steps {
+                checkout scm
             }
         }
-    }
 
+        stage('Backend Build') {
+            steps {
+                dir('food-delivery-3-tier-source-code/backend') {
+                    sh '''
+                        npm install
+                        echo "Backend dependencies installed successful"
+                    '''
+                }
+            }
+        }
+
+        stage('Frontend Build') {
+            steps {
+                dir('food-delivery-3-tier-source-code/frontend') {
+                    sh '''
+                        npm install
+                        npm run build
+                    '''
+                }
+            }
+        }
+
+        stage('Check Workspace') {
+            steps {
+                sh '''
+                    pwd
+                    ls -la
+                    find . -name Dockerfile -print
+                '''
+            }
+        }
+stage('Docker Login Test') {
+            steps {
+                withCredentials([usernamePassword(
+                    credentialsId: 'Docker-cred',
+                    usernameVariable: 'DOCKER_USER',
+                    passwordVariable: 'DOCKER_PASSWORD'
+                )]) {
+                    sh '''
+                        echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USER" --password-stdin
+                    '''
+                }
+            }
+        }
+        stage('Build Docker Images') {
+            steps {
+                sh '''
+                    docker build -t nikhilbecomessre/food-delivery-backend:${BUILD_NUMBER} ./food-delivery-3-tier-source-code/backend
+                    docker build -t nikhilbecomessre/food-delivery-frontend:${BUILD_NUMBER} ./food-delivery-3-tier-source-code/frontend
+                '''
+            }
+        }
+
+        stage('Docker Images') {
+            steps {
+                sh '''
+                    docker images | grep food-delivery
+                '''
+            }
+        }
+
+        stage('Push Docker Images') {
+            steps {
+                script {
+                    docker.withRegistry('https://index.docker.io/v1/', 'Docker-cred') {
+
+                        docker.image("nikhilbecomessre/food-delivery-backend:${BUILD_NUMBER}").push()
+
+                        docker.image("nikhilbecomessre/food-delivery-frontend:${BUILD_NUMBER}").push()
+                    }
+                }
+            }
+        }
+
+    }   // <-- closes stages
 
     post {
-
         success {
             echo 'Food Delivery CI Pipeline completed successfully!'
         }
