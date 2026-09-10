@@ -14,7 +14,30 @@ pipeline {
     }
 
     stages {
+        
+        stage('Verify Docker Agent') {
+    steps {
+        sh '''
+            echo "===== HOSTNAME ====="
+            hostname
 
+            echo "===== CURRENT USER ====="
+            whoami
+
+            echo "===== OS ====="
+            cat /etc/os-release
+
+            echo "===== NODE VERSION ====="
+            node --version
+
+            echo "===== DOCKER VERSION ====="
+            docker --version
+
+            echo "===== CONTAINER CHECK ====="
+            cat /proc/1/cgroup
+        '''
+    }
+}
 
         stage('Checkout') {
             steps {
