@@ -1,18 +1,28 @@
 pipeline {
   agent {
     docker {
-      image 'DOCKER_HUB_USERNAME/Dcokerimage:versoion'
+      image 'nikhilbecomessre/jenkinagentv1:latest'
       args '--user root -v /var/run/docker.sock:/var/run/docker.sock' // mount Docker socket to access the host's Docker daemon
-    }
-  }
+    
+  
   stages {
-
-        stage('Checkout') {
+    stage('Check Agent') {
             steps {
-                checkout scm
+                sh '''
+                    echo "Hostname:"
+                    hostname
+
+                    echo "OS:"
+                    cat /etc/os-release | head
+
+                    echo "Node:"
+                    node --version
+
+                    echo "User:"
+                    whoami
+                '''
             }
         }
-
         stage('Backend Build') {
             steps {
                 dir('food-delivery-3-tier-source-code/backend') {
